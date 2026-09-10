@@ -1,0 +1,14 @@
+# Python cache
+__pycache__/
+*.pyc
+# Virtual environment
+.venv/
+# Generated output
+output/
+*.log
+*.aux
+*.out
+*.bbl
+*.blg
+# macOS junk
+.DS_Store

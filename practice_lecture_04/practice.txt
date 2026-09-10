@@ -1,6 +1,2 @@
 George Xu
-<<<<<<< HEAD
 My favorite color is blue
-=======
-My favorite color is blue
->>>>>>> make_conflict

@@ -111,7 +111,7 @@ def main():
         matrix = np.column_stack([x, *curves.values()])
         np.savetxt(filename, matrix, header=header, comments="", fmt="%16.8e")
 
-    # Plot generation
+    # This is obviously the plotting:
     plt.figure(figsize=(8, 4.5))
     for name, y in curves.items():
         plt.plot(x, y, label=f"{name}(x)", linewidth=1.5)
@@ -122,7 +122,7 @@ def main():
     plt.axhline(0, color="black", linestyle="--", linewidth=0.6, alpha=0.5)
     plt.axvline(0, color="black", linestyle="--", linewidth=0.6, alpha=0.5)
     plt.grid(True, linestyle=":", alpha=0.6)
-    plt.legend(frameon=True)
+    plt.legend()
     plt.tight_layout()
 
     # Here we do part (d)

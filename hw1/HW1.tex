@@ -1,0 +1,71 @@
+
+% main.tex
+\documentclass[12pt]{article}
+
+% Let chapters compile on their own via \documentclass[../main.tex]{subfiles}
+\usepackage{subfiles}
+
+% All packages, theorem environments, and macros live here:
+\input{preamble} 
+
+% (Optional) BibLaTeX setup lives in preamble;
+% \addbibresource{bibliography.bib}
+
+% (Optional) equation numbering by subsection:
+\numberwithin{equation}{subsection}
+
+\title{Materials Modelling Homework 1}
+\author{George Xu}
+\date{}
+
+\begin{document}
+\maketitle
+
+
+\subsection*{Homework 1}\label{sec:}
+\subsubsection*{Implementation Overview}
+I produced \texttt{trigonometry.py} per the instructions to compute and plot the trigonometric curves $\cos$, $\sin$, and $\text{sinc}$ across the range $x ∈ [-10, 10]$ with the specified $N=401$ points ($Δ x = 0.05$). Command-line execution is conducted via the \texttt{Makefile} as required supporting the three types of operations \texttt{plot}, \texttt{write}, and \texttt{read}, with parameters via \texttt{FXN}, \texttt{TXT}, and \texttt{FMT}. Furthermore, executing the file directly via python3 is viable with the correct flags but is more tedious.
+
+\subsubsection*{Handling the discontinuity in $\text{sinc}(0)$}
+The unnormalized sinc function $\text{sinc}(x) = \frac{\sin(x)}{x}$ has a singular, pointwise (and thus removeable) discontinuity at $x=0$, where its two-sided limit is $1$. If we evaluate $\sin(0)/0$ directly, we acquire an IEEE 754 \texttt{NaN} error from $0/0$ floating-point division. To prevent such floating-point exceptions and avoid any cancellation errors near $x=0$, we compute $\text{sinc}(x)$ for values of $x$ sufficient small, $|x| < 10^{-4}$, via a second-order Taylor series:
+\begin{equation}
+\text{sinc}(x) ≈ 1 - \frac{x^2}{6}
+\end{equation}
+I specifically chose this, without any additional precision as one might imagine, as the truncation error is bounded by $\frac{x⁴}{120} ≤ \frac{(10^{-4})⁴}{120} ≈ 8.33 ⋅ 10^{-19}$, well below the precision ($ε≈ 2.22 ⋅ 10^{-16}$). Points outside this threshold use standard division. We simply need to check if something is in this bound, then divide.
+
+\subsubsection*{Results \& Verification}
+I will here conduct an independent numerical check. We evaluate at the origin, matching the analytical values: $\cos(0) = 1.00000000$, $\sin(0) = 0.00000000$, and $\text{sinc}(0) = 1.00000000$.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{plot.jpeg}
+    \caption{Diagram as desired}
+\end{figure}
+\newpage
+\begin{verbatim}
+# Example ASCII export header and slice around x = 0.0:
+x cos sin sinc
+ -1.50000000e-01   9.88771078e-01  -1.49438132e-01   9.96254216e-01
+ -1.00000000e-01   9.95004165e-01  -9.98334166e-02   9.98334166e-01
+ -5.00000000e-02   9.98750260e-01  -4.99791693e-02   9.99583385e-01
+  0.00000000e+00   1.00000000e+00   0.00000000e+00   1.00000000e+00
+  5.00000000e-02   9.98750260e-01   4.99791693e-02   9.99583385e-01
+  1.00000000e-01   9.95004165e-01   9.98334166e-02   9.98334166e-01
+  1.50000000e-01   9.88771078e-01   1.49438132e-01   9.96254216e-01
+\end{verbatim}
+
+\section*{Contributions}
+I independently wrote and tested \texttt{trigonometry.py} along with the \texttt{Makefile}. I had minimal discussions with anyone regarding the assignment and generally had no additional help in the completion of this assignment
+
+\section*{Workload Feedback}
+About $5$ hours.
+
+\section*{Integrity Affirmation}
+I wrote the solution and the code I am submitting, and I understand it well enough to explain any part of it. Wherever anyone helped me with an idea, an approach, a debugging session, or code, I have acknowledged it in my Contributions section. I did not use generative artificial intelligence, and I did not use solutions from outside this course, including past years solutions. The Contributions section accurately describes how our group worked.
+\vspace{0.5em}
+
+\noindent\textbf{Signed:} \underline{\makebox[6cm][c]{George Xu}} \quad \textbf{Date:} \underline{\makebox[3.5cm][c]{September 18, 2026}}
+
+
+\end{document}
+
+

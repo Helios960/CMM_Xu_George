@@ -5,10 +5,17 @@ __pycache__/
 .venv/
 # Generated output
 output/
-*.log
 *.aux
+*.log
 *.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
 *.bbl
 *.blg
+*.pdf
+plot.png
+data.txt
 # macOS junk
 .DS_Store

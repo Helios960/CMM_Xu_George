@@ -18,5 +18,5 @@ read:
 
 report:
 	$(PYTHON) trigonometry.py --function=cos,sinc,sin --print=jpeg
-	xelatex -interaction=nonstopmode -halt-on-error report.tex
-	xelatex -interaction=nonstopmode -halt-on-error report.tex
+	xelatex -interaction=nonstopmode HW1.tex
+	xelatex -interaction=nonstopmode HW1.tex

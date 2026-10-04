@@ -11,6 +11,7 @@ const double RHO = 1.29;
 const double AREA = 0.0014;
 const double V0 = 70.0;
 const double MAGNUS_CONST = 0.25;
+const double pi = std::acos(-1.0);
 
 enum ModelType { // These are the types of gold balls which we simulated. ModelType is restricted to these three options to prevent possible errors
     IDEAL = 1,
@@ -26,22 +27,13 @@ struct TrajectoryResult {
 
 // We compute drag coefficient C here.
 double GetC(ModelType model, double v_mag) {
-    if (model == IDEAL) {
-        return 0.0;
-    }
-    if (model == SMOOTH) {
-        return 0.5;
-    }
-    // Dimpled ball model
-    if (v_mag <= 14.0) {
-        return 0.5;
-    }
+    if (model == IDEAL) return 0.0;
+    if (model == SMOOTH || v_mag <= 14.0) return 0.5;
     return 7.0 / v_mag;
 }
 
 // We simulate the thing here
 TrajectoryResult run_simulation(ModelType model, double theta_deg, double dt, bool print_trace = false) {
-    const double pi = std::acos(-1.0);
     double rad = theta_deg * pi / 180.0;
 
     double x = 0.0;
@@ -123,7 +115,6 @@ int main(int argc, char* argv[]) {
               << std::setw(15) << "Analytic Time (s)\n";
 
     std::vector<double> angles = {45.0, 30.0, 15.0, 9.0};
-    const double pi = std::acos(-1.0);
     const double dt_standard = 0.01;
 
     for (double th : angles) {

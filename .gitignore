@@ -15,6 +15,7 @@ output/
 *.bbl
 *.blg
 *.pdf
+*.zip
 plot.png
 data.txt
 # macOS junk

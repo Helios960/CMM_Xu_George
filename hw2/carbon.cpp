@@ -27,7 +27,7 @@ void write_carbon_csv(double dt_step, double N0, double tau, double t_max) {
         t += dt_step;
     }
     out.close();
-    std::cout << "[I/O] Generated CSV: " << fname << "\n";
+    std::cout << "Generated CSV: " << fname << "\n";
 }
 
 int main(int argc, char* argv[]){
@@ -105,9 +105,10 @@ int main(int argc, char* argv[]){
     std::cout << "Expected second-order error : " << order_error << " %\n";
     std::cout << "========================================================\n";
 
-    // Write the CSV datasets required for the report plots
+    // Write all three CSV datasets required for the report plots
     write_carbon_csv(10.0, N0, tau, t_max);
     write_carbon_csv(100.0, N0, tau, t_max);
+    write_carbon_csv(1000.0, N0, tau, t_max);
 
     return 0;
 }

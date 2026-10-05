@@ -7,10 +7,10 @@ CXXFLAGS = -O3 -Wall -Wextra -std=c++17
 LATEX = xelatex
 LATEXFLAGS = -interaction=nonstopmode -halt-on-error
 
-DOC = main
+DOC = HW2
 TEX_SRC = $(DOC).tex preamble.tex
-PLOTS = carbon_activity.pdf golf_trajectories.pdf
-CSVS = carbon_dt10.csv carbon_dt100.csv golf_theta45.csv golf_theta30.csv golf_theta15.csv golf_theta9.csv
+PLOTS = carbon_activity.pdf carbon_part_c.pdf golf_trajectories.pdf
+CSVS = carbon_dt10.csv carbon_dt100.csv carbon_dt1000.csv golf_theta45.csv golf_theta30.csv golf_theta15.csv golf_theta9.csv
 
 .PHONY: all carbon golf plots report clean distclean
 

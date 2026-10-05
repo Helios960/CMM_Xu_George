@@ -1,0 +1,185 @@
+% HW2.tex
+\documentclass[12pt]{article}
+\usepackage{subfiles}
+\input{preamble} 
+\numberwithin{equation}{subsection}
+
+\title{Materials Modelling Homework 2}
+\author{George Xu}
+\date{October 2, 2026}
+\usepackage{siunitx}
+\begin{document}
+\maketitle
+
+\subsection*{Problem 1: Carbon Dating}
+
+\subsubsection*{Part a}
+We are given that the radioactive decay for the isotope $^{14}\si{C}$ follows the ODE:
+\begin{equation}
+\frac{dN}{dt} = -\frac{N}{τ}
+\end{equation}
+where $N(t)$ represents the number of undecayed nuclei at time $t$ and $τ$ denotes the decay constant. Using separation of variables with initial condition $N(0) = N₀$ gives:
+\begin{equation}
+∫_{N₀}^{N(t)} \frac{dN'}{N'} = -\frac{1}{τ} ∫₀^t dt' ⟹ \ln\paren*{\frac{N(t)}{N₀}} = -\frac{t}{τ} ⟹ N(t) = N₀ \exp\paren*{-\frac{t}{τ}}
+\end{equation}
+By definition, $T_{1/2}$ is defined as the time interval required for the remaining nuclei to halve: $N(T_{1/2}) = N₀ / 2$. Substituting this gives:
+\begin{equation}
+\frac{N₀}{2} = N₀ \exp\paren*{-\frac{T_{1/2}}{τ}} ⟹ \frac{1}{2} = \exp\paren*{-\frac{T_{1/2}}{τ}}
+\end{equation}
+Via rearrangement:
+\begin{equation}
+-\ln 2 = -\frac{T_{1/2}}{τ} ⟹ τ = \frac{T_{1/2}}{\ln 2}
+\end{equation}
+Given $T_{1/2} = 5700~\si{years}$, the decay constant equals:
+\begin{equation}
+τ = \frac{5700}{\ln 2} ≈ 8223.36~\si{years}
+\end{equation}
+The initial quantity of $^{14}\si{C}$ is $m₀ = 10^{-12}~\si{kg} = 10^{-9}~\si{g}$. Using $M = 14~\si{g/mol}$ and $N_A = 6.022 × 10^{23}~\si{atoms/mol}$, the initial number of parent atoms is
+\begin{equation}
+N₀ = \frac{m₀}{M} N_A = \frac{10^{-9}~\si{g}}{14~\si{g/mol}} × 6.022 × 10^{23}~\si{atoms/mol} ≈ 4.3014 × 10^{13}~\si{atoms}
+\end{equation}
+The initial activity $R₀ = N₀ / τ$ corresponds to $5.2307 × 10^9~\si{decays/year}$, which equals $165.75~\si{Bq}$.
+
+\subsubsection*{Part b}
+The population is integrated using the forward Euler recurrence:
+\begin{equation}
+N_{n+1} = N_n - \frac{N_n}{τ}Δ t = N_n \paren*{1 - \frac{Δ t}{τ}}
+\end{equation}
+At $t = 20000~\si{years}$, the exact analytical value is $N_{\si{analytic}} = 3.7789 × 10^{12}~\si{atoms}$. The numerical results and relative deviations are summarized below:
+\begin{itemize}
+    \item $Δ t = 10~\si{years}$: $N(20000) = 3.7733 × 10^{12}~\si{atoms}$, percentage error $-0.15\%$.
+    \item $Δ t = 100~\si{years}$: $N(20000) = 3.7230 × 10^{12}~\si{atoms}$, percentage error $-1.48\%$.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.78\linewidth]{carbon_activity.pdf}
+    \caption{Radioactive activity $R(t)$ of $^{14}\si{C}$ over 20000 years computed using Euler's method with step widths $Δ t = 10~\si{yr}$ and $Δ t = 100~\si{yr}$, plotted alongside the analyici exponential decay curve (top) and the corresponding relative percentage error over time (bottom).}
+    \label{fig:carbon_decay}
+\end{figure}
+
+\subsubsection*{Part c}
+Simulating with $Δ t = 1000~\si{years}$ yields $N(20000) = 3.2167 × 10^{12}~\si{atoms}$, corresponding to an accumulated percentage error of $-14.88\%$. 
+
+After two half-lives ($t = 2 T_{1/2} = 11400~\si{yrs}$), the exact analytical value is:
+\begin{equation}
+N_{\si{analytic}}(11400) = N₀ \paren*{\frac{1}{2}}² = 0.25 N₀ ≈ 1.0754 × 10^{13}~\si{atoms}
+\end{equation}
+Taking 11 full steps of size $Δ t = 1000~\si{years}$ followed by the final remainder step of $400~\si{years}$ gives:
+\begin{equation}
+N_{\si{Euler}}(11400) = N₀ \paren*{1 - \frac{1000}{τ}}^{11} \paren*{1 - \frac{400}{τ}} ≈ 0.22852 N₀
+\end{equation}
+This yields an actual numerical percentage deviation of:
+\begin{equation}
+\text{Actual Deviation} = \frac{N_{\si{Euler}} - N_{a}}{N_{a}} × 100\% = \frac{0.228524905 - 0.25000}{0.25000} × 100\% = -8.590\%
+\end{equation}
+This is identical to our computed value of $-8.590\%$. To compare this with theoretical truncation error, we expand the Taylor series:
+\begin{equation}
+N(t + Δ t) = N(t) + Δ t \frac{dN}{dt} + \frac{(Δ t)²}{2} \frac{d²N}{dt²} + \mathcal{O}((Δ t)³)
+\end{equation}
+Using $dN/dt = -N/τ$ and $d²N/dt² = N/τ²$, the second-order term neglected per step is:
+\begin{equation}
+E = \frac{1}{2}\paren*{\frac{Δ t}{τ}}² N(t)
+\end{equation}
+Accumulating over $n = t / Δ t$ steps, the leading-order global fractional deviation satisfies:
+\begin{equation}
+\frac{N_n}{N_{\si{analytic}}} ≈ \exp\paren*{-\frac{1}{2}\frac{t Δ t}{τ²}} ≈ 1 - \frac{1}{2}\frac{t Δ t}{τ²}
+\end{equation}
+Evaluating this at $t = 2 T_{1/2} = 2τ \ln 2$ yields:
+\begin{equation}
+\text{Expected Error} ≈ -\frac{1}{2}\frac{(2τ \ln 2)Δ t}{τ²} = -\ln 2 \paren*{\frac{Δ t}{τ}} = -\ln 2 \paren*{\frac{1000}{8223.36}} ≈ -8.43\%
+\end{equation}
+The expected second-order truncation error of $-8.43\%$ accounts for the primary share of the true $-8.590\%$ numerical error.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.78\linewidth]{carbon_part_c.pdf}
+    \caption{$^{14}\si{C}$ activity evaluated with Euler time step $Δ t = 1000~\si{yr}$ compared with the analytic exponential curve. Discrete markers denote individual integration points, with an annotation marking the deviation at two half-lives ($t = 11400~\si{yr}$).} Note that this does not use the final 400 year step. While this extra step is done in the code, and therefore can be read by simply running the binary for carbon.cpp, it is not included here due to excessive complications.
+    \label{fig:carbon_part_c}
+\end{figure}
+
+\newpage
+\subsection*{Problem 2: Aerodynamic Golf Trajectory}
+
+\subsubsection*{Numerical Implementation and Verification}
+The physical parameters used in this simulation follow the requirement per the assignment. Aerodynamic drag and Magnus spin were added one term at a time. The state variables were updated in the required sequence of $x$, $y$, $v_{\si{mag}}$, $C$, $v_x$, and $v_y$. Ground impact was calculated by linear interpolation between the final positive height and the subsequent negative step.
+
+We first verified this by running the ideal trajectory without drag or spin against the analytic relations $R = v₀² \sin(2θ)/g$ and $t_{\si{flight}} = 2 v₀ \sinθ / g$. As shown in Table~\ref{tab:analytic_check}, the numerical integration closely reproduces the analytic values.
+
+\begin{table}[h]
+\centering
+\caption{Ideal simulation compared with analytic solutions ($Δ t = 0.01~\si{s}$).}
+\label{tab:analytic_check}
+\begin{tabular}{ccccc}
+\hline
+\textbf{Launch Angle} $θ$ & \textbf{Simulated Range (m)} & \textbf{Analytic Range (m)} & \textbf{Simulated Time (s)} & \textbf{Analytic Time (s)} \\ \hline
+$45.0^∘$ & 500.495 & 500.000 & 10.112 & 10.102 \\
+$30.0^∘$ & 433.619 & 433.013 & 7.153  & 7.143  \\
+$15.0^∘$ & 250.676 & 250.000 & 3.707  & 3.697  \\
+$9.0^∘$  & 155.199 & 154.508 & 2.245  & 2.235  \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection*{Four Physical Models Comparison}
+Trajectories were evaluated across angles $θ ∈ \{45^∘, 30^∘, 15^∘, 9^∘\}$ for all four models.
+
+\begin{table}[h]
+\centering
+\caption{Calculated ranges (in meters) across all four models and angles ($Δ t = 0.01~\si{s}$).}
+\label{tab:ranges}
+\begin{tabular}{ccccc}
+\hline
+\textbf{Angle} $θ$ & \textbf{(1) Ideal} & \textbf{(2) Smooth} & \textbf{(3) Dimpled} & \textbf{(4) Dimpled + Spin} \\ \hline
+$45.0^∘$ & 500.49 & 80.70 & 158.00 & 132.45 \\
+$30.0^∘$ & 433.62 & 85.00 & 174.80 & 175.43 \\
+$15.0^∘$ & 250.68 & 72.91 & 144.99 & 201.05 \\
+$9.0^∘$  & 155.20 & 59.70 & 108.57 & 206.86 \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\linewidth]{golf_trajectories.pdf}
+    \caption{Trajectory profiles $y(x)$ for launch angles $45^∘$, $30^∘$, $15^∘$, and $9^∘$ across the four physical flight models.}
+    \label{fig:golf_trajectories}
+\end{figure}
+
+\subsubsection*{Time-Step Stability and Convergence Check}
+The Euler method fails for an undamped harmonic oscillator because the eigenvalues $λ = ± iω$ are purely imaginary. The Euler amplification factor $|1 + iω Δ t| = \sqrt{1 + ω²(Δ t)²}$ strictly exceeds unity for any non-zero time step, producing artificial energy growth no matter how precise we set out time delta. This therefore compounds over time, leading to uncontrolled growth in the form of artifical energy generation. 
+
+On the contrary aerodynamic drag introduces physical dissipation of energy. The velocity decay terms produce eigenvalues with substantial negative real parts. When using a sufficiently small time step, the numerical amplification factor remains bounded within the unit circle. More importantly, however, the golf ball trajectories terminate upon ground contact after 4 to 8 seconds. This bounded duration prevents numerical truncation errors from compounding infinitely over time.
+
+\begin{table}[h]
+\centering
+\caption{Time-step convergence check for Model 4 (Dimpled with Spin).}
+\label{tab:dt_check}
+\begin{tabular}{cccc}
+\hline
+\textbf{Launch Angle} $θ$ & \textbf{Range at $Δ t = 0.01~\si{s}$ (m)} & \textbf{Range at $Δ t = 0.005~\si{s}$ (m)} & \textbf{Difference $Δ R$ (m)} \\ \hline
+$45.0^∘$ & 132.449 & 132.505 & $+0.056$ \\
+$30.0^∘$ & 175.428 & 175.440 & $+0.012$ \\
+$15.0^∘$ & 201.053 & 201.039 & $-0.014$ \\
+$9.0^∘$  & 206.859 & 206.833 & $-0.026$ \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection*{Discussion of Aerodynamic Effects}
+\begin{enumerate}
+    \item Effect of Drag: Quadratic drag reduces the maximum ideal range from $500.49~\si{m}$ down to $85.00~\si{m}$ for a smooth ball (with the $45.0^\circ$ trajectory dropping to $80.70~\si{m}$). Because high trajectories spend more time at elevated speeds fighting drag, steep launches suffer severe attenuation. This shifts the optimal launch angle downward from the vacuum angle of $45^\circ$ to approximately $30^\circ$.
+    \item Effect of Dimples: At high speeds ($v > 14~\si{m/s}$), dimples induce turbulent flow across the surface. This delays boundary layer separation along the rear surface, reducing the effective drag coefficient and increasing carry. This extends the $30^\circ$ range from $85.00~\si{m}$ to $174.80~\si{m}$.
+    \item Effect of Backspin: Backspin produces a Magnus lift force perpendicular to the velocity vector. Near launch, the vertical Magnus acceleration is $a_{\si{mag}, y} = 0.25 v_x ≈ 16.9\text{ to }17.3~\si{m/s}²$, which exceeds gravitational acceleration ($9.80~\si{m/s}^2$). This upward force provides aerodynamic lift that prolongs flight time. Because lift compensates for lower initial vertical velocities, low-angle trajectories become far more effective. This pushes the optimal launch angle down toward $9^\circ$, achieving the maximum driving distance of $206.86~\si{m}$.
+\end{enumerate}
+
+\subsection*{Contributions}
+I worked independently on the analytical derivation, error analysis, and Euler integration for Problem 1. For Problem 2, I independently coded the equations of motion, aerodynamic models, and terminal interpolation routines. I did not discuss with my study group due to a late start.
+
+\subsection*{Workload Feedback}
+About 6 hours.
+
+\subsection*{Integrity Affirmation}
+I wrote the solution and the code I am submitting, and I understand it well enough to explain any part of it. Wherever anyone helped me with an idea, an approach, a debugging session, or code, I have acknowledged it in my Contributions section. I did not use generative artificial intelligence, and I did not use solutions from outside this course, including past years' solutions. The Contributions section accurately describes how our group worked.
+\vspace{0.5em}
+
+\noindent\textbf{Signed:} \underline{\makebox[6cm][c]{George Xu}} \quad \textbf{Date:} \underline{\makebox[3.5cm][c]{October 2, 2026}}
+
+\end{document}

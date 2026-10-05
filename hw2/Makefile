@@ -41,7 +41,7 @@ plots: $(PLOTS)
 $(PLOTS): plot_csv.py $(CSVS)
 	python3 plot_csv.py
 
-# Compiles the PDF report using XeLaTeX (two passes to resolve cross-references)
+# Compiles the PDF report using XeLaTeX (with two passes to resolve cross-references)
 report: $(DOC).pdf
 
 $(DOC).pdf: $(TEX_SRC) $(PLOTS)

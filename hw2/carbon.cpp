@@ -3,6 +3,32 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <fstream>
+
+// Helper to write CSV directly to disk via ofstream
+void write_carbon_csv(double dt_step, double N0, double tau, double t_max) {
+    std::string fname = "carbon_dt" + std::to_string(static_cast<int>(dt_step)) + ".csv";
+    std::ofstream out(fname);
+    if (!out.is_open()) {
+        std::cerr << "Error opening file: " << fname << "\n";
+        return;
+    }
+
+    out << "t_years,activity_euler_Bq,activity_exact_Bq\n";
+    const double s_p_y = 365.25 * 86400.0;
+    double t = 0.0;
+    double N = N0;
+    while (t - t_max <= 1e-9) {
+        double R_euler = (N / tau) / s_p_y;
+        double R_exact = ((N0 * std::exp(-t / tau)) / tau) / s_p_y;
+        out << std::fixed << std::setprecision(2) << t << ","
+            << std::setprecision(5) << R_euler << "," << R_exact << "\n";
+        N += (-N / tau) * dt_step;
+        t += dt_step;
+    }
+    out.close();
+    std::cout << "[I/O] Generated CSV: " << fname << "\n";
+}
 
 int main(int argc, char* argv[]){
     // Physical Constants
@@ -24,18 +50,7 @@ int main(int argc, char* argv[]){
     }
     
     if (plot_dt > 0.0) {
-        std::cout << "t_years,activity_euler_Bq,activity_exact_Bq\n";
-        const double s_p_y = 365.25 * 86400.0;
-        double t = 0.0;
-        double N = N0;
-        while (t - t_max <= 1e-9) {
-            double R_euler = (N / tau) / s_p_y;
-            double R_exact = ((N0 * std::exp(-t / tau)) / tau) / s_p_y;
-            std::cout << std::fixed << std::setprecision(2) << t << ","
-                      << std::setprecision(5) << R_euler << "," << R_exact << "\n";
-            N += (-N / tau) * plot_dt;
-            t += plot_dt;
-        }
+        write_carbon_csv(plot_dt, N0, tau, t_max);
         return 0;
     }
 
@@ -89,6 +104,10 @@ int main(int argc, char* argv[]){
     std::cout << "Actual percentage deviation : " << std::fixed << std::setprecision(3) << actual_percent_dev << " %\n";
     std::cout << "Expected second-order error : " << order_error << " %\n";
     std::cout << "========================================================\n";
+
+    // Write the CSV datasets required for the report plots
+    write_carbon_csv(10.0, N0, tau, t_max);
+    write_carbon_csv(100.0, N0, tau, t_max);
 
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <fstream>
 
 // We first define our physics parameters
 const double G = 9.80;
@@ -33,7 +34,7 @@ double GetC(ModelType model, double v_mag) {
 }
 
 // We simulate the thing here
-TrajectoryResult run_simulation(ModelType model, double theta_deg, double dt, bool print_trace = false) {
+TrajectoryResult run_simulation(ModelType model, double theta_deg, double dt, std::ofstream* out_file = nullptr) {
     double rad = theta_deg * pi / 180.0;
 
     double x = 0.0;
@@ -45,8 +46,10 @@ TrajectoryResult run_simulation(ModelType model, double theta_deg, double dt, bo
     double drag_prefactor = (RHO * AREA) / MASS;
 
     while (true) {
-        if (print_trace) {
-            std::cout << t << "," << x << "," << y << "," << static_cast<int>(model) << "\n";
+        if (out_file && out_file->is_open()) {
+            *out_file << std::fixed << std::setprecision(4) << t << ","
+                      << std::setprecision(3) << x << "," << y << ","
+                      << static_cast<int>(model) << "\n";
         }
 
         // Required order: x, y, v_mag, C, vx, vy
@@ -58,6 +61,11 @@ TrajectoryResult run_simulation(ModelType model, double theta_deg, double dt, bo
             double fraction = -y / (y_next - y);
             double final_range = x + fraction * (x_next - x);
             double final_time = t + fraction * dt;
+            if (out_file && out_file->is_open()) {
+                *out_file << std::fixed << std::setprecision(4) << final_time << ","
+                          << std::setprecision(3) << final_range << ",0.000,"
+                          << static_cast<int>(model) << "\n";
+            }
             return {final_range, final_time};
         }
 
@@ -84,6 +92,23 @@ TrajectoryResult run_simulation(ModelType model, double theta_deg, double dt, bo
     }
 }
 
+// Helper to write CSV files directly to disk
+void write_golf_csv(double theta_deg) {
+    std::string fname = "golf_theta" + std::to_string(static_cast<int>(theta_deg)) + ".csv";
+    std::ofstream out(fname);
+    if (!out.is_open()) {
+        std::cerr << "Error opening file: " << fname << "\n";
+        return;
+    }
+    out << "t_s,x_m,y_m,model_id\n";
+    const double dt = 0.005;
+    for (int m = 1; m <= 4; ++m) {
+        run_simulation(static_cast<ModelType>(m), theta_deg, dt, &out);
+    }
+    out.close();
+    std::cout << "[I/O] Generated CSV: " << fname << "\n";
+}
+
 int main(int argc, char* argv[]) {
     double plot_theta = -1.0;
     for (int i = 1; i < argc; ++i) {
@@ -94,12 +119,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (plot_theta > 0.0) {
-        // Output CSV format for plotting specified launch angle
-        std::cout << "t_s,x_m,y_m,model_id\n";
-        const double dt = 0.005;
-        for (int m = 1; m <= 4; ++m) {
-            run_simulation(static_cast<ModelType>(m), plot_theta, dt, true);
-        }
+        write_golf_csv(plot_theta);
         return 0;
     }
 
@@ -170,6 +190,11 @@ int main(int argc, char* argv[]) {
                   << std::setw(16) << delta << " m\n";
     }
     std::cout << "=========================================================================\n";
+
+    // Write all four trajectory CSVs for report figure generation
+    for (double th : angles) {
+        write_golf_csv(th);
+    }
 
     return 0;
 }

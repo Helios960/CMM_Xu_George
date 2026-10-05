@@ -4,9 +4,17 @@ CXXFLAGS = -O3 -Wall -Wextra -std=c++17
 # I am using 03 to optimize for execution speed.
 # I am also using Wall and Wextra to see if I have any issues with the code
 
-.PHONY: all carbon golf clean
+LATEX = xelatex
+LATEXFLAGS = -interaction=nonstopmode -halt-on-error
 
-all: carbon golf
+DOC = main
+TEX_SRC = $(DOC).tex preamble.tex
+PLOTS = carbon_activity.pdf golf_trajectories.pdf
+CSVS = carbon_dt10.csv carbon_dt100.csv golf_theta45.csv golf_theta30.csv golf_theta15.csv golf_theta9.csv
+
+.PHONY: all carbon golf plots report clean distclean
+
+all: carbon golf report
 
 # Compiles the binary if needed using the above compiler and flags, then executes with or without WIDTH
 carbon: carbon_bin
@@ -22,5 +30,26 @@ golf: golf_bin
 golf_bin: golf.cpp
 	$(CXX) $(CXXFLAGS) -o golf golf.cpp
 
+# Binaries write CSVs directly to disk via ofstream
+$(CSVS): carbon_bin golf_bin
+	./carbon
+	./golf
+
+# Python script processes the generated CSVs into PDF figures
+plots: $(PLOTS)
+
+$(PLOTS): plot_csv.py $(CSVS)
+	python3 plot_csv.py
+
+# Compiles the PDF report using XeLaTeX (two passes to resolve cross-references)
+report: $(DOC).pdf
+
+$(DOC).pdf: $(TEX_SRC) $(PLOTS)
+	$(LATEX) $(LATEXFLAGS) $(DOC).tex
+	$(LATEX) $(LATEXFLAGS) $(DOC).tex
+
 clean:
-	rm -f carbon golf *.o
+	rm -f carbon golf *.o *.aux *.log *.out *.toc *.synctex.gz *.fls *.fdb_latexmk $(CSVS)
+
+distclean: clean
+	rm -f $(DOC).pdf $(PLOTS)

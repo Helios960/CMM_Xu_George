@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 
-def setup_grid(n, R_bound=10.0, a=0.6):
+def setup_grid(n, R_bound=10.0):
     L = R_bound + 1.0 # To ensure the domain contians the boundary
     x = np.linspace(-L, L, n)
     h = x[1] - x[0]
@@ -95,7 +95,7 @@ def run_2b():
     plt.show()
     
 def run_2cd():
-    print("Running the script for part 1c for grid density scaling")
+    print("Running the script for part 2c/d for grid density scaling")
     n_vals = [15, 21, 27, 35]
     tol_fixed = 1e-4
     iters_fixed = []
@@ -116,6 +116,58 @@ def run_2cd():
     fit_d = np.polyfit(np.log(n_vals), np.log(iters_scaled), 1)
     print(f"Part 2c fitted component exponent p = {fit_c[0]:.3f}")
     print(f"Part 2d fitted component exponent p = {fit_d[0]:.3f}")
+    
+def run_2e():
+    print("Running the script for part 2e for Jacobi vs SOR comparison")
+    n_vals = [15, 21, 27, 35]
+    tol = 1e-4
+    iters_jacobi = []
+    iters_sor = []
+    
+    for n in n_vals:
+        # Jacobi
+        _, _, iter_jacobi = solve_poisson(n, tol, use_sor = False)
+        iters_jacobi.append(iter_jacobi)
+        
+        # Optimized ω for 3D cubic grid with Dririchlet boundaries
+        ρ_jacobi = np.cos(np.pi / (n-1))
+        ω_opt = 2.0 / (1.0 + np.sqrt(1.0 - ρ_jacobi**2))
+        
+        # SOR
+        _, _, iter_sor = solve_poisson(n, tol, use_sor=True, ω_sor=ω_opt)
+        iters_sor.append(iter_sor)
+        
+    # Fitting
+    fit_jacobi = np.polyfit(np.log(n_vals), np.log(iters_jacobi), 1)
+    fit_sor = np.polyfit(np.log(n_vals), np.log(iters_sor), 1)
+    
+    print(f"Jacobi fitted exponent p = {fit_jacobi[0]:.3f}")
+    print(f"SOR fitted exponent p = {fit_sor[0]:.3f}")
+    
+    #plotting
+    plt.plot(np.log10(n_vals), np.log10(iters_jacobi), marker="o", label=f"Jacobi (p={fit_jacobi[0]:.2f})")
+    plt.plot(np.log10(n_vals), np.log10(iters_sor), marker="s", label=f"SOR (p={fit_sor[0]:.2f})")
+    plt.xlabel("log₁₀(Grid Size n)")
+    plt.ylabel("log₁₀(Iterations)")
+    plt.title("Grid Scaling: Jacobi vs SOR")
+    plt.legend()
+    plt.show()    
+    
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--part", type=str, required=True, help="Assignment part (eg.g 2a, 2b, 2c, 2d)")
+    args = parser.parse_args()
+    
+    if args.part == "2a":
+        run_2a()
+    elif args.part == "2b":
+        run_2b()
+    elif args.part in ["2c", "2d"]:
+        run_2cd()
+    elif args.part == "2e":
+        run_2e()
+        
     
         
 

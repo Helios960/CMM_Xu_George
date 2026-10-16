@@ -6,7 +6,7 @@ import argparse
 g = 9.8
 l = 9.8
 γ = 0.25
-ω_θ = np.sqrt(g / l)
+ω_0 = np.sqrt(g / l)
 
 def driving_force(α_D, Ω_D, t):
     return α_D * np.sin(Ω_D * t)
@@ -54,8 +54,8 @@ def rk4(θ0, ω0, α_D, Ω_D, t_array, nonlinear = False):
     
 def get_steady_state_A(θ, t_array, drive_freq):
     # We are trying to discard transience, which we set as the first 60% of our simulation
-    idx = int(0.6 * len(θ))
-    steadyθ = θ[idx:]
+    index = int(0.6 * len(θ))
+    steadyθ = θ[index:]
     return np.max(np.abs(steadyθ))
 
 def run_1b():
@@ -81,6 +81,25 @@ def run_1b():
     plt.legend()
     plt.show()
     
+def run_1c():
+    print("Running the script for part 1c for nonlinear comparison")
+    W_res = np.sqrt(ω_0**2 - 2*γ**2) # ANalytical definition of resonance
+    t = np.linspace(0, 200, 10000)
     
+    # We now check the 10% criteron over a range of amplitudes
+    αs = np.linspace(0.2, 1.2, 50)
+    for a in αs:
+        θ_lin, _ = rk4(0.0, 0.0, a, W_res, t, nonlinear=False)
+        θ_nonlin, _ = rk4(0.0, 0.0, a, W_res, t, nonlinear=True)
+        
+        index = int(0.6 * len(t))
+        max_diff = np.max(np.abs(θ_nonlin[index:] - θ_lin[index:]))
+        amp_lin = get_steady_state_A(θ_lin, t, W_res)
+        
+        if max_diff > 0.10 * amp_lin:
+            print(f"10% divergence exceeded at α_D = {a:.3f} rad/s²")
+            print(f"Max θ reached by nonlinear: {np.max(np.abs(θ_nonlin[index:])):.3f} rad")
+            break
+
 
     

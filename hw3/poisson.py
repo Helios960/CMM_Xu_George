@@ -40,24 +40,48 @@ def solve_poisson(n, tol, use_sor=False, ω_sor=1.0):
     iters = 0
     max_iter = 20000
     
+    # Red-Black checkerboard masks for true SOR vectorization
+    I, J, K = np.ogrid[0:n, 0:n, 0:n]
+    checker = (I + J + K) % 2
+    red = (checker == 0)
+    black = (checker == 1)
+    inner = np.s_[1:-1, 1:-1, 1:-1]
+    
     while iters < max_iter:
         V_old = np.copy(V)
         
-        # We now do a Jacobi update
-        V_jacobi = np.zeros_like(V)
-        V_jacobi[1:-1, 1:-1, 1:-1] = (
-            V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
-            V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
-            V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:] +
-            ρ_term[1:-1, 1:-1, 1:-1]
-        ) / 6.0
-        
         if use_sor:
-            V[1:-1, 1:-1, 1:-1] = (1 - ω_sor) + V_old[1:-1, 1:-1, 1:-1] + ω_sor * V_jacobi[1:-1, 1:-1, 1:-1]
+            # Update Red points using current Black neighbors
+            V_sum_red = (
+                V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
+                V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
+                V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:]
+            )
+            V[inner][red[inner]] = (1 - ω_sor) * V[inner][red[inner]] + \
+                                   ω_sor * (V_sum_red[red[inner]] + ρ_term[inner][red[inner]]) / 6.0
+            V[~inside] = 0.0 # Spherical symmetry
+            
+            # Update Black points using the newly computed Red neighbors
+            V_sum_black = (
+                V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
+                V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
+                V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:]
+            )
+            V[inner][black[inner]] = (1 - ω_sor) * V[inner][black[inner]] + \
+                                     ω_sor * (V_sum_black[black[inner]] + ρ_term[inner][black[inner]]) / 6.0
+            V[~inside] = 0.0 # Spherical symmetry
+            
         else:
+            # We now do a Jacobi update
+            V_jacobi = np.zeros_like(V)
+            V_jacobi[inner] = (
+                V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
+                V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
+                V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:] +
+                ρ_term[inner]
+            ) / 6.0
             V = V_jacobi
-        
-        V[~inside] = 0.0 # Spherical symmetry
+            V[~inside] = 0.0 # Spherical symmetry
         
         ΔV = np.max(np.abs(V-V_old))
         max_V = np.max(np.abs(V))
@@ -78,35 +102,56 @@ def solve_poisson_cube(n, tol, use_sor=False, ω_sor = 1.0):
     iters = 0
     max_iter = 30000
     
+    I, J, K = np.ogrid[0:n, 0:n, 0:n]
+    checker = (I + J + K) % 2
+    red = (checker == 0)
+    black = (checker == 1)
+    inner = np.s_[1:-1, 1:-1, 1:-1]
+    
+    def enforce_bounds(V_grid):
+        V_grid[0,:,:] = 1.0
+        V_grid[-1,:,:] = 0.0
+        V_grid[:,0,:] = 0.0
+        V_grid[:,-1,:] = 0.0
+        V_grid[:,:,0] = 0.0
+        V_grid[:,:,-1] = 0.0
+    
     while iters < max_iter:
         V_old = np.copy(V)
-        V_jacobi = np.zeros_like(V)
-        
-        V_jacobi[1:-1, 1:-1, 1:-1] = (
-            V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
-            V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
-            V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:]
-        ) / 6.0
         
         if use_sor:
-            V[1:-1, 1:-1, 1:-1] = (1 - ω_sor) + V_old[1:-1, 1:-1, 1:-1] + ω_sor * V_jacobi[1:-1, 1:-1, 1:-1]
-        else:
-            V = V_jacobi
+            V_sum_red = (
+                V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
+                V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
+                V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:]
+            )
+            V[inner][red[inner]] = (1 - ω_sor) * V[inner][red[inner]] + ω_sor * V_sum_red[red[inner]] / 6.0
+            enforce_bounds(V)
             
-        # Reenforce boundary conditions
-        V[0,:,:] = 1.0
-        V[-1,:,:] = 0.0
-        V[:,0,:] = 0.0
-        V[:,-1,:] = 0.0
-        V[:,:,0] = 0.0
-        V[:,:,-1] = 0.0
-        
+            V_sum_black = (
+                V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
+                V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
+                V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:]
+            )
+            V[inner][black[inner]] = (1 - ω_sor) * V[inner][black[inner]] + ω_sor * V_sum_black[black[inner]] / 6.0
+            enforce_bounds(V)
+            
+        else:
+            V_jacobi = np.zeros_like(V)
+            V_jacobi[inner] = (
+                V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
+                V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
+                V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:]
+            ) / 6.0
+            V = V_jacobi
+            enforce_bounds(V)
+            
         ΔV = np.max(np.abs(V - V_old))
         if ΔV < tol:
             break
         iters += 1
         
-    return iters 
+    return iters
 
 def run_2a():
     print("Running the script for part 1a for Jacobi relaxation")

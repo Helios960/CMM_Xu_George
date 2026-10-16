@@ -1,0 +1,1 @@
+Run "make report" then run "make clean". You will be able to see the pdf and diagrams.

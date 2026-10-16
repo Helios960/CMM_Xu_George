@@ -52,4 +52,4 @@ poisson:
 	python poisson.py --part $(PART)
 
 clean:
-	rm -f *.aux *.log *.out $(DIAGRAMS)
+	rm -f *.aux *.log *.out

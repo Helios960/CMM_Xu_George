@@ -101,6 +101,75 @@ def run_1c():
             print(f"Max θ reached by nonlinear: {np.max(np.abs(θ_nonlin[index:])):.3f} rad")
             break
 
+def run_bonus1():
+    print("Running the script for bonus 1 for Lyapunov Exponents")
+    t = np.linspace(0, 150, 150000)
+    Ω_D = 0.666
+    αs = [0.2, 0.5, 1.2]
+    dθ_0 = 0.001
+    
+    plt.figure(figsize=(10, 6))
+    
+    for α in αs:
+        # Base traj:
+        θ1, _ = rk4(0.0, 0.0, α, Ω_D, t, nonlinear=True)
+        # Perturbed:
+        θ2, _ = rk4(dθ_0, 0.0, α, Ω_D, t, nonlinear=True)
+        
+        # We now unwrap to prevent 2π wrappings
+        θ1_unwrapped = np.unwrap(θ1)
+        θ2_unwrapped = np.unwrap(θ2)
+        
+        Δθ = np.abs(θ2_unwrapped - θ1_unwrapped)
+        
+        # We now filter out zero values so we can use log scales:
+        valid_index = Δθ > 0
+        t_valid = t[valid_index]
+        Δ_valid = Δθ[valid_index]
+        
+        plt.plot(t_valid, Δ_valid, label=f"α_D={α}")
+        
+        # We estiamte in early window for exponent (e.g. t=10 to 40) to avoid transient drop and saturated regions
+        mask = (t_valid > 10) & (t_valid < 40)
+        if np.any(mask):
+            p = np.polyfit(t_valid[mask], np.log(Δ_valid[mask]), 1)
+            print(f"Lyapunov exponent for α_D={α}: λ ≈ {p[0]:.4f}")
+    
+    plt.yscale("log")
+    plt.xlabel("Time (s)")
+    plt.ylabel("|Δθ(t) (rad)")
+    plt.title("Sensitivity to Intitial Conditions")
+    plt.legend()
+    plt.show()
+    
+def run_bonus2():
+    print("Running the script for bonus 2 for energy analysis")
+    W_res = np.sqrt(ω_0**2 - 2*γ**2)
+    t = np.linspace(0, 200, 20000)
+    
+    th, om = rk4(0.0, 0.0, 0.2, W_res, t, nonlinear=True)
+    
+    # We find the steady state as last 20 seconds:
+    mask = t > 180
+    t_ss = t[mask]
+    θ_ss = th[mask]
+    ω_ss = om[mask]
+    
+    # Specific energies:
+    KEₘ = 0.5 * (l * ω_ss)**2
+    PEₘ = g * l * (1 - np.cos(θ_ss))
+    
+    E_tot = KEₘ + PEₘ
+    
+    plt.plot(t_ss, KEₘ, label="Specific Kinetic Energy")
+    plt.plot(t_ss, PEₘ, label="Specific Potential Energy")
+    plt.plot(t_ss, E_tot, label="Specific Total Energy", color="black", linestyle="--")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Specific Energy (J/kg)")
+    plt.title("Steady State Energies near Resoannce")
+    plt.legend()
+    plt.show()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--part", type=str, required=True, help="Assignment part (e.g. 1b, 1c)")
@@ -110,6 +179,10 @@ if __name__ == "__main__":
         run_1b()
     elif args.part == "1c":
         run_1c()
+    elif args.part == "bonus1":
+        run_bonus1()
+    elif args.part == "bonus2":
+        run_bonus2()
     else:
         print("This section is not specified")  
     

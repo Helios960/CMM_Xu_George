@@ -52,3 +52,35 @@ def rk4(θ0, ω0, α_D, Ω_D, t_array, nonlinear = False):
         
     return θ, ω
     
+def get_steady_state_A(θ, t_array, drive_freq):
+    # We are trying to discard transience, which we set as the first 60% of our simulation
+    idx = int(0.6 * len(θ))
+    steadyθ = θ[idx:]
+    return np.max(np.abs(steadyθ))
+
+def run_1b():
+    print("Running the script for part 1b for numerical resonance curve")
+    α_D = 0.2
+    ωs = np.linspace(0.5, 1.5, 20)
+    t = np.linspace(0, 200, 10000)
+    
+    amps_ec = []
+    amps_rk = []
+    
+    for W in ωs:
+        θ_ec, _ = euler_cromer(0.0, 0.0, α_D, W, t)
+        θ_rk, _ = rk4(0.0, 0.0, α_D, W, t)
+        amps_ec.append(get_steady_state_A(θ_ec, t, W))
+        amps_rk.append(get_steady_state_A(θ_rk, t, W))
+    
+    plt.plot(ωs, amps_ec, label="Euler-Cromer", marker = "o")
+    plt.plot(ωs, amps_rk, label="RK4", marker = "x", linestyle = "--")
+    plt.xlabel("Drive Frequency (rad/s)")
+    plt.ylabel("Steady-State Amplitude (rad)")
+    plt.title("Resonance Curve (Linear Pendulum)")
+    plt.legend()
+    plt.show()
+    
+    
+
+    

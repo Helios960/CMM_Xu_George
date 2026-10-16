@@ -69,6 +69,45 @@ def solve_poisson(n, tol, use_sor=False, ω_sor=1.0):
         
     return V, x, iters
 
+
+def solve_poisson_cube(n, tol, use_sor=False, ω_sor = 1.0):
+    V = V_init(n)
+    # We now set one face to V=1, others at V=0:
+    V[0,:,:] = 1.0
+    
+    iters = 0
+    max_iter = 30000
+    
+    while iters < max_iter:
+        V_old = np.copy(V)
+        V_jacobi = np.zeros_like(V)
+        
+        V_jacobi[1:-1, 1:-1, 1:-1] = (
+            V[0:-2, 1:-1, 1:-1] + V[2:, 1:-1, 1:-1] +
+            V[1:-1, 0:-2, 1:-1] + V[1:-1, 2:, 1:-1] + 
+            V[1:-1, 1:-1, 0:-2] + V[1:-1, 1:-1, 2:]
+        ) / 6.0
+        
+        if use_sor:
+            V[1:-1, 1:-1, 1:-1] = (1 - ω_sor) + V_old[1:-1, 1:-1, 1:-1] + ω_sor * V_jacobi[1:-1, 1:-1, 1:-1]
+        else:
+            V = V_jacobi
+            
+        # Reenforce boundary conditions
+        V[0,:,:] = 1.0
+        V[-1,:,:] = 0.0
+        V[:,0,:] = 0.0
+        V[:,-1,:] = 0.0
+        V[:,:,0] = 0.0
+        V[:,:,-1] = 0.0
+        
+        ΔV = np.max(np.abs(V - V_old))
+        if ΔV < tol:
+            break
+        iters += 1
+        
+    return iters 
+
 def run_2a():
     print("Running the script for part 1a for Jacobi relaxation")
     V, x, iters = solve_poisson(n=41, tol=1e-4)
@@ -153,6 +192,39 @@ def run_2e():
     plt.legend()
     plt.show()    
     
+def run_bonus3():
+    print("Running the script for bonus 3 for boundary driven grid scaling")
+    n_vals = [15, 21, 27, 35]
+    tol = 1e-4
+    iters_jacobi = []
+    iters_sor = []
+    
+    for n in n_vals:
+        # Jacobi
+        iter_jacobi = solve_poisson_cube(n, tol, use_sor = False)
+        iters_jacobi.append(iter_jacobi)
+        
+        # SOR with optimal Ω:
+        ρ_jacobi = np.cos(np.pi / (n-1))
+        ω_opt = 2.0 / (1.0 + np.sqrt(1.0 - ρ_jacobi**2))
+        
+        iter_sor = solve_poisson_cube(n, tol, use_sor = True)
+        iters_sor.append(iter_sor)
+        
+    fit_jacobi = np.polyfit(np.log(n_vals), np.log(iters_jacobi), 1)
+    fit_sor = np.polyfit(np.log(n_vals), np.log(iters_sor), 1)
+    
+    print(f"Boundary Jacobi fitted exponent p = {fit_jacobi[0]:.3f}")
+    print(f"Boundary SOR fitted exponent p = {fit_sor[0]:.3f}")
+    
+    plt.plot(np.log10(n_vals), np.log10(iters_jacobi), marker='o', label=f'Jacobi (p={fit_jacobi[0]:.2f})')
+    plt.plot(np.log10(n_vals), np.log10(iters_sor), marker='s', label=f'SOR (p={fit_sor[0]:.2f})')
+    plt.xlabel('log10(Grid Size n)')
+    plt.ylabel('log10(Iterations)')
+    plt.title('Grid Scaling: Boundary-Driven Cube')
+    plt.legend()
+    plt.show()
+    
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -167,6 +239,8 @@ if __name__ == "__main__":
         run_2cd()
     elif args.part == "2e":
         run_2e()
+    elif args.part == "bonus3":
+        run_bonus3()
         
     
         

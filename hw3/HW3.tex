@@ -1,0 +1,190 @@
+\documentclass[12pt]{article}
+\usepackage{subfiles}
+\input{preamble} 
+\numberwithin{equation}{subsection}
+
+\title{Materials Modelling Homework 2}
+\author{George Xu}
+\date{October 2, 2026}
+\usepackage{siunitx}
+\begin{document}
+\maketitle
+
+\subsection*{Problem 1: the driven, damped pendulum}
+
+\subsubsection*{Part a}
+The equation of motion for the linear, damped, driven pendulum is given by:
+\[
+\frac{d²θ}{dt²} = -\frac{g}{l}θ - 2γ\frac{dθ}{dt} + α_{D}\sin(Ω_{D}t)
+\]
+With the parameters $g=9.8~\si{m/s²}$ and $l=9.8~\si{m}$, the natural frequency is $Ω₀ = \sqrt{g/l} = 1.0~\si{rad/s}$. Substituting the steady-state trial solution $θ(t) = θ₀\sin(Ω_{D}t - φ)$ and its derivatives into the equation gives us the steady-state amplitude function:
+\[
+θ₀(Ω_{D}) = \frac{α_{D}}{\sqrt{(Ω₀² - Ω_{D}²)² + (2γΩ_{D})²}}
+\]
+To find the resonance frequency, we minimize the term inside the square root with respect to $Ω_{D}$, which gives $Ω_{res} = \sqrt{Ω₀² - 2γ²}$. Substituting $γ = 0.25~\si{s⁻¹}$ gives a resonance frequency of:
+\[
+Ω_{res} = \sqrt{1.0 - 2(0.25)²} = \sqrt{0.875} ≈ 0.9354~\si{rad/s}
+\]
+The peak amplitude at this resonance frequency, driven at $α_{D} = 0.2~\si{rad/s²}$, is:
+\[
+θ₀(Ω_{res}) = \frac{0.2}{\sqrt{(1.0 - 0.875)² + 4(0.0625)(0.875)}} ≈ 0.4131~\si{rad}
+\]
+At this peak amplitude, $θ₀ ≈ 0.4131$ and $\sin(0.4131) ≈ 0.4014$. The small-angle approximation remains reasonable here because the $2.8\%$ difference between the angle and its sine is relatively minor.
+
+\subsubsection*{Part b}
+The resonance curve was integrated numerically using both Euler-Cromer and fourth-order Runge-Kutta methods. The steady-state amplitude was extracted after discarding the initial transient decay. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.78\linewidth]{resonance_curve.pdf}
+    \caption{Steady-state amplitude $θ₀(Ω_{D})$ of the linear pendulum simulated across various drive frequencies using Euler-Cromer and RK4 integrators.}
+    \label{fig:resonance_curve}
+\end{figure}
+
+To analyze the full width at half maximum (FWHM), we compare the assigned parameters against the condition $γ ≪ Ω₀$. Our damping coefficient $γ = 0.25$ is one-quarter of $Ω₀ = 1.0$, meaning the condition is poorly satisfied. The approximation $FWHM ≈ 2\sqrt{3}γ$ gives $0.866~\si{rad/s}$. Because the approximation assumes weak damping, we must calculate the width directly from the analytic amplitude curve. Setting $θ₀(Ω) = 0.4131 / 2 = 0.20655$ gives the polynomial:
+\[
+(1.0 - Ω²)² + (0.5Ω)² = \paren*{\frac{0.2}{0.20655}}² ≈ 0.9375
+\]
+Solving $Ω⁴ - 1.75Ω² + 0.0625 = 0$ gives half-maximum crossings at $Ω₋ ≈ 0.191~\si{rad/s}$ and $Ω_{+} ≈ 1.309~\si{rad/s}$. The true analytic FWHM is $1.118~\si{rad/s}$. 
+
+Comparing these results to the class sweep for $q=0.5$ at identical drive amplitude, both the peak position ($0.935~\si{rad/s}$) and the peak height ($0.413~\si{rad}$) match the behavior plotted on the board. The position aligns with the frequency spacing evaluated in class curves.
+
+\subsubsection*{Part c}
+Setting the drive frequency at $Ω_{res} ≈ 0.935~\si{rad/s}$, the restoring term $(g/l)θ$ was replaced with the more accurate $(g/l)\sinθ$ term to evaluate the nonlinear pendulum. At the low drive amplitude of $α_{D} = 0.2~\si{rad/s²}$, both models produce nearly identical trajectories and phase plane orbits. At $α_{D} = 1.2~\si{rad/s²}$, the nonlinear phase plane orbit drastically warps and the trajectories diverge entirely.
+
+By sweeping $α_{D}$ upward from $0.2$, the maximum steady-state difference between the two models was continually tracked. The threshold where the maximum absolute difference $max|θ_{nonlinear}(t) - θ_{linear}(t)|$ first exceeds $10\%$ of the linear steady-state amplitude occurs at:
+\[
+α_{D} = 0.302~\si{rad/s²}
+\]
+At this drive amplitude, the corresponding peak angle reached by the nonlinear pendulum is $θ₀ = 0.636~\si{rad}$. This divergence shows that the small-angle approximation has broken down. The linear model severely overpredicts the true restoring force at large angles, allowing the nonlinear pendulum to swing wider and fall out of phase with the linear prediction.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\linewidth]{nonlinear_comparison.pdf} 
+    \caption{Time series $θ(t)$ and phase plane $(Ω, θ)$ comparisons between the linear and nonlinear models at $α_D = 0.2$ and $1.2~\si{rad/s²}$.}
+    \label{fig:nonlinear_comparison}
+\end{figure}
+
+\subsection*{Problem 2: the Poisson equation for a dipole}
+
+\subsubsection*{Part a}
+The electric potential of a static dipole is computed by solving the Poisson equation $∇² V = -ρ / ε₀$ on a Cartesian grid with a grounded spherical boundary. The dipole consists of charges $Q/ε₀ = ± 1$ separated by $a=0.6$ along the z-axis. 
+
+Splitting a charge linearly between two neighboring grid points preserves the total charge and the exact dipole separation distance regardless of the grid resolution, which allows us to ensure a consistent setup when comparing grid densities in later parts of the problem
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.48\linewidth]{equipotential.pdf}
+    \includegraphics[width=0.48\linewidth]{dipole_far_field.pdf}
+    \caption{Left: Equipotential lines in the $y=0$ plane after Jacobi relaxation convergence. Right: Log-log comparison of $V(z)$ along the dipole axis against the expected $1/r²$ free-space dipole law.}
+    \label{fig:dipole_fields}
+\end{figure}
+
+The far-field comparison shows that the $1/r²$ free-space behavior holds approximately in the intermediate window $r ∈[1.5, 4.0]$. The comparison breaks down at $r < 1.5$ because the observation point is too close to the individual discrete charges, and it breaks down at $r > 4.0$ because the grounded boundary condition at $R=10$ artificially forces the potential to drop to zero faster than it would in infinite free space.
+
+\subsubsection*{Part b}
+The Jacobi relaxation was run for the same grid at multiple tolerances $ε$ to measure the iteration count required for convergence.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{niter_vs_tol.pdf}
+    \caption{Number of iterations $N_{iter}$ required to reach convergence as a function of the tolerance $ε$.}
+    \label{fig:niter_tol}
+\end{figure}
+
+The linear relationship on the semi-logarithmic plot indicates that the computational cost per decimal of tolerance is indeed approaching a constant.
+
+\subsubsection*{Part c}
+The scaling of the Jacobi method was measured across four grid densities while holding fixed $\max|Δ V| / \max|V| < ε$. The fitted exponent for the scaling relation $N_{iter} \propto n^p$ is:
+\[
+p_{c} = 0.681
+\]
+This measurement does not reproduce the value $p=2$ as the stopping criterion only restricts the size of the final update step. The ratio between the final update and the true remaining error scales with the grid size, meaning a fixed update tolerance enforces an increasingly weaker accuracy requirement on finer grids.
+
+\subsubsection*{Part d}
+By scaling the tolerance by a factor of $1-ρ ≈ 1 - \cos\paren*{π / (n-1)}$, we adjust the stopping rule to maintain a consistent requirement on the remaining error. Repeating the measurement at the same densities gives a new fitted exponent:
+\[
+p_{d} = 1.804
+\]
+The exponent moved upward and much closer to the expectation of $2$. This shift shows that the raw change per sweep is a very poor representation for overall accuracy because solvers take much smaller steps on finer grids, giving a false impression of convergence unless the tolerance is explicitly scaled.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{grid_scaling.pdf}
+    \caption{Grid density scaling for the Jacobi method using a fixed tolerance and a tolerance scaled by the spectral radius factor}
+    \label{fig:grid_scaling}
+\end{figure}
+
+\subsubsection*{Part e}
+The Successive Over-Relaxation solver was implemented using a red-black checkerboard update method (A/N: since I kept getting overflow errors otherwise, quite annoying that problem was) to properly apply the newly computed values immediately. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{jacobi_vs_sor.pdf}
+    \caption{Grid scaling comparison between Jacobi and SOR methods on the dipole problem.}
+    \label{fig:jacobi_vs_sor}
+\end{figure}
+
+The fitted exponents for the two methods computed with the scaled tolerance are:
+\[
+p_{\si{Jacobi}} = 0.681 \quad \text{and} \quad p_{\si{SOR}} = 0.919
+\]
+The comparison using the scaled tolerance from part d is likely trustworthy because it evaluates the methods based on reaching an equivalent true error across different grid sizes, whereas the unscaled comparison only tests how quickly they reach some arbitary update step size.
+
+\subsection*{Bonus: Quantifying sensitivity to initial conditions}
+The separation $|Δθ(t)|$ between two trajectories initialized with $Δθ ≈ 0.001~\si{rad}$ apart was observed for the nonlinear pendulum at a fixed drive frequency of $Ω_D = 0.666~\si{s^{-1}}$. The Lyapunov exponent $λ$ was estimated using a linear fit of the log-scale separation within the time window $t ∈[10, 40]~\si{s}$. This specific window was chosen to exclude the initial transient drop before the exponential behavior stabilizes, while stopping before the chaotic separation saturates at the maximum phase space distance. I had considered applying an advanced technique of "resetting" once a sufficient separate saturation was reached for a full examination, but I deemed this unnecessary for this assignemnt
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\linewidth]{sensitivity.pdf}
+    \caption{Logarithmic plot of the absolute angular separation $|Δθ(t)|$ over time for three drive amplitudes, illustrating exponential convergence and divergence.}
+    \label{fig:sensitivity}
+\end{figure}
+
+The estimated Lyapunov exponents extracted from the slope of the linear fits are:
+\[
+λ_{0.2} ≈ -0.2489, \quad λ_{0.5} ≈ -0.2477, \quad λ_{1.2} ≈ 0.1401
+\]
+A negative Lyapunov exponent as seen here indicates that nearby trajectories converge toward the same limit cycle, meaning the motion at $α_D = 0.2$ and $0.5~\si{rad/s^2}$ is regular. The one positive Lyapunov exponent indicates exponential divergence of nearby trajectories, meaning the motion at $α_D = 1.2~\si{rad/s^2}$ is chaotic.
+
+\subsection*{Bonus: Where does the energy go?}
+The kinetic and potential energies per unit mass were computed over several cycles of the steady state near resonance. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{energies.pdf}
+    \caption{Specific kinetic energy, potential energy, and total mechanical energy over several cycles in the periodic steady state.}
+    \label{fig:energies}
+\end{figure}
+
+Although the motion has settled into a perfectly periodic steady state, the total mechanical energy is not constant over time. This is because the driven, damped pendulum is an open system with non-conservative forces. The driving force injects energy into the system as the damping force dissipates it. Because the instantaneous rate of energy input ($P_{\si{drive}} = F_D v$) and energy loss ($P_{\si{damp}} = -bv^2$) do not perfectly cancel at every moment, the total mechanical energy fluctuates within the cycle, even though the net energy change over one full period is zero.
+
+\subsection*{Bonus: Grid scaling for a boundary-driven problem}
+The grid scaling study was repeated for a source-free volume driven entirely by Dirichlet boundary conditions, with one face set to $V=1$ and the other five set to $V=0$. Utilizing the same unscaled stopping criterion, the measured exponents are:
+\[
+p_{\si{Jacobi}} = 1.517 \quad \text{and} \quad p_{\si{SOR}} = 1.605
+\]
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{boundary_cube.pdf}
+    \caption{Grid scaling for Jacobi and SOR relaxation methods on the boundary-driven cubic domain.}
+    \label{fig:boundary_scaling}
+\end{figure}
+
+Compared to the unscaled dipole Jacobi exponent of $p=0.681$, the boundary-driven case approaches the theoretical asymptotic expectation of $p=2$ much more clearly. This discrepancy suggests that a measured scaling exponent is not a universal property of the algorithm alone. The scaling behavior instead seems heavily dependent on the specific boundary conditions and the physical source distribution.
+
+
+
+\subsection*{Contributions}
+I worked independently.
+
+\subsection*{Workload Feedback}
+About 6 hours.
+
+\subsection*{Integrity Affirmation}
+I wrote the solution and the code I am submitting, and I understand it well enough to explain any part of it. Wherever anyone helped me with an idea, an approach, a debugging session, or code, I have acknowledged it in my Contributions section. I did not use generative artificial intelligence, and I did not use solutions from outside this course, including past years' solutions. The Contributions section accurately describes how our group worked.
+\vspace{0.5em}
+
+\noindent\textbf{Signed:} \underline{\makebox[6cm][c]{George Xu}} \quad \textbf{Date:} \underline{\makebox[3.5cm][c]{October 16, 2026}}
+
+\end{document}

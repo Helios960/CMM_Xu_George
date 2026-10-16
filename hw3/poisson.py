@@ -158,11 +158,34 @@ def run_2a():
     V, x, iters = solve_poisson(n=41, tol=1e-4)
     center = len(x) // 2
     
-    plt.contour(x,x,V[:, center, :],levels=20)
+    # Equipotential Plot
+    plt.figure()
+    plt.contour(x, x, V[:, center, :], levels=20)
     plt.title("Equipotential Lines in y=0 plane")
     plt.xlabel("x")
-    plt.ylabel("y")
-    plt.show()
+    plt.ylabel("z")
+    plt.savefig('equipotential.pdf', bbox_inches='tight')
+    plt.close()
+    
+    # Far-field V(r) along dipole z-axis
+    plt.figure()
+    z_axis = x[center:]
+    V_z = V[center, center, center:]
+    
+    valid = z_axis > 0.3 # Exclude charges and inside radius
+    z_valid = z_axis[valid]
+    V_valid = V_z[valid]
+    
+    plt.plot(np.log10(z_valid), np.log10(np.abs(V_valid)), label='Numerical V(z)')
+    ref_V = np.abs(V_valid[0]) * (z_valid[0] / z_valid)**2
+    plt.plot(np.log10(z_valid), np.log10(ref_V), linestyle='--', label='Far-Field 1/r² Law')
+    
+    plt.title("Dipole Far-Field Comparison")
+    plt.xlabel("log₁₀(z)")
+    plt.ylabel("log₁₀(|V|)")
+    plt.legend()
+    plt.savefig('dipole_far_field.pdf', bbox_inches='tight')
+    plt.close()
     
 def run_2b():
     print("Running the script for part 1b for tolerance sweep")
@@ -176,7 +199,8 @@ def run_2b():
     plt.xlabel("log₁₀(Tolerance)")
     plt.ylabel("Iterations")
     plt.title("N_iter vs Tolerance")
-    plt.show()
+    plt.savefig('niter_vs_tol.pdf', bbox_inches='tight')
+    plt.close()
     
 def run_2cd():
     print("Running the script for part 2c/d for grid density scaling")
@@ -200,6 +224,16 @@ def run_2cd():
     fit_d = np.polyfit(np.log(n_vals), np.log(iters_scaled), 1)
     print(f"Part 2c fitted component exponent p = {fit_c[0]:.3f}")
     print(f"Part 2d fitted component exponent p = {fit_d[0]:.3f}")
+    
+    plt.figure()
+    plt.plot(np.log10(n_vals), np.log10(iters_fixed), marker='o', label=f'Fixed Tol (p={fit_c[0]:.2f})')
+    plt.plot(np.log10(n_vals), np.log10(iters_scaled), marker='x', label=f'Scaled Tol (p={fit_d[0]:.2f})')
+    plt.xlabel('log₁₀(Grid Size n)')
+    plt.ylabel('log₁₀(Iterations)')
+    plt.title('Grid Scaling (Jacobi)')
+    plt.legend()
+    plt.savefig('grid_scaling.pdf', bbox_inches='tight')
+    plt.close()
     
 def run_2e():
     print("Running the script for part 2e for Jacobi vs SOR comparison")
@@ -235,7 +269,8 @@ def run_2e():
     plt.ylabel("log₁₀(Iterations)")
     plt.title("Grid Scaling: Jacobi vs SOR")
     plt.legend()
-    plt.show()    
+    plt.savefig('jacobi_vs_sor.pdf', bbox_inches='tight')
+    plt.close()  
     
 def run_bonus3():
     print("Running the script for bonus 3 for boundary driven grid scaling")
@@ -264,11 +299,12 @@ def run_bonus3():
     
     plt.plot(np.log10(n_vals), np.log10(iters_jacobi), marker='o', label=f'Jacobi (p={fit_jacobi[0]:.2f})')
     plt.plot(np.log10(n_vals), np.log10(iters_sor), marker='s', label=f'SOR (p={fit_sor[0]:.2f})')
-    plt.xlabel('log10(Grid Size n)')
-    plt.ylabel('log10(Iterations)')
+    plt.xlabel('log₁₀(Grid Size n)')
+    plt.ylabel('log₁₀(Iterations)')
     plt.title('Grid Scaling: Boundary-Driven Cube')
     plt.legend()
-    plt.show()
+    plt.savefig('boundary_cube.pdf', bbox_inches='tight')
+    plt.close()
     
     
 if __name__ == "__main__":

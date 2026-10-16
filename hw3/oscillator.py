@@ -79,7 +79,8 @@ def run_1b():
     plt.ylabel("Steady-State Amplitude (rad)")
     plt.title("Resonance Curve (Linear Pendulum)")
     plt.legend()
-    plt.show()
+    plt.savefig('resonance_curve.pdf', bbox_inches='tight')
+    plt.close()
     
 def run_1c():
     print("Running the script for part 1c for nonlinear comparison")
@@ -100,6 +101,30 @@ def run_1c():
             print(f"10% divergence exceeded at α_D = {a:.3f} rad/s²")
             print(f"Max θ reached by nonlinear: {np.max(np.abs(θ_nonlin[index:])):.3f} rad")
             break
+    
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    for i, a in enumerate([0.2, 1.2]):
+        th_lin, om_lin = rk4(0.0, 0.0, a, W_res, t, nonlinear=False)
+        th_non, om_non = rk4(0.0, 0.0, a, W_res, t, nonlinear=True)
+        idx = int(0.6 * len(t))
+        
+        axs[0, i].plot(t[idx:], th_lin[idx:], label='Linear')
+        axs[0, i].plot(t[idx:], th_non[idx:], label='Nonlinear')
+        axs[0, i].set_title(f'Time Series (α_D={a})')
+        axs[0, i].set_xlabel('Time (s)')
+        axs[0, i].set_ylabel('θ (rad)')
+        axs[0, i].legend()
+        
+        axs[1, i].plot(th_lin[idx:], om_lin[idx:], label='Linear')
+        axs[1, i].plot(th_non[idx:], om_non[idx:], label='Nonlinear')
+        axs[1, i].set_title(f'Phase Plane (α_D={a})')
+        axs[1, i].set_xlabel('θ (rad)')
+        axs[1, i].set_ylabel('ω (rad/s)')
+        axs[1, i].legend()
+        
+    plt.tight_layout()
+    plt.savefig('nonlinear_comparison.pdf', bbox_inches='tight')
+    plt.close()
 
 def run_bonus1():
     print("Running the script for bonus 1 for Lyapunov Exponents")
@@ -135,12 +160,13 @@ def run_bonus1():
             p = np.polyfit(t_valid[mask], np.log(Δ_valid[mask]), 1)
             print(f"Lyapunov exponent for α_D={α}: λ ≈ {p[0]:.4f}")
     
-    plt.yscale("log")
-    plt.xlabel("Time (s)")
-    plt.ylabel("|Δθ(t) (rad)")
-    plt.title("Sensitivity to Intitial Conditions")
+    plt.yscale('log')
+    plt.xlabel('Time (s)')
+    plt.ylabel('|Δθ(t)| (rad)')
+    plt.title('Sensitivity to Initial Conditions')
     plt.legend()
-    plt.show()
+    plt.savefig('sensitivity.pdf', bbox_inches='tight')
+    plt.close()
     
 def run_bonus2():
     print("Running the script for bonus 2 for energy analysis")
@@ -161,14 +187,15 @@ def run_bonus2():
     
     E_tot = KEₘ + PEₘ
     
-    plt.plot(t_ss, KEₘ, label="Specific Kinetic Energy")
-    plt.plot(t_ss, PEₘ, label="Specific Potential Energy")
-    plt.plot(t_ss, E_tot, label="Specific Total Energy", color="black", linestyle="--")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Specific Energy (J/kg)")
-    plt.title("Steady State Energies near Resoannce")
+    plt.plot(t_ss, KEₘ, label='Specific Kinetic Energy')
+    plt.plot(t_ss, PEₘ, label='Specific Potential Energy')
+    plt.plot(t_ss, E_tot, label='Specific Total Energy', color='black', linestyle='--')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Specific Energy (J/kg)')
+    plt.title('Steady State Energies near Resonance')
     plt.legend()
-    plt.show()
+    plt.savefig('energies.pdf', bbox_inches='tight')
+    plt.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

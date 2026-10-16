@@ -1,0 +1,372 @@
+% =========================== 
+% Core encoding & layout 
+% =========================== 
+\usepackage{geometry} 
+\usepackage[indent]{parskip} 
+\geometry{left=1in,right=1in,top=1in,bottom=1in} 
+\setlength{\parskip}{1em} 
+
+% =========================== 
+% Fonts & micro-typography (LuaLaTeX) 
+% =========================== 
+\usepackage{fontspec} 
+\defaultfontfeatures{Ligatures=TeX} 
+% \usepackage{pagella-otf}
+% \setmainfont{pagella-otf}
+\usepackage[nomath]{libertinus}
+\usepackage{menukeys}
+
+% Palatino-like text font for LuaLaTeX (TeX Gyre Pagella is the standard free Palatino clone) 
+% \setmainfont{TeX Gyre Pagella} 
+
+\usepackage{microtype} 
+
+% =========================== 
+% Graphics & color 
+% =========================== 
+\usepackage{graphicx} 
+\usepackage[table]{xcolor} 
+\graphicspath{{figures/}{../figures/}} 
+\definecolor{Green}{HTML}{1B7F5A} 
+\definecolor{Defns}{HTML}{CC7E7E} %Pink 
+\definecolor{ERs}{HTML}{7DA2C7} %Blue 
+\definecolor{Ps}{HTML}{A17800} %Gold 
+
+% =========================== 
+% Math & diagrams 
+% =========================== 
+\usepackage{amsmath,amsthm} 
+\usepackage{amscd} 
+\usepackage{amssymb}
+\usepackage{mathtools} 
+% If you want matching math font in a Palatino style, use unicode-math: 
+% (Recommended, but note it changes the math font stack vs pdfLaTeX.) 
+\usepackage{unicode-math}
+\setmathfont{STIX Two Math}
+\setmathfont[range=\mathcal]{STIX Two Math}
+
+% \usepackage{mathabx}
+\usepackage{tikz} 
+\usepackage{tikz-cd} 
+\usepackage{bbm} 
+\usepackage{extarrows}
+
+% ===========================
+%  Preferred symbol variants / defaults
+% ===========================
+\let\emptyset\varnothing
+\let\leq\leqslant
+\let\le\leqslant
+\let\geq\geqslant
+\let\ge\geqslant
+
+\renewcommand{\iff}{\;\Longleftrightarrow\;}
+
+% ===========================
+%  Hyperlinks (color + underline)
+% ===========================
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=Green,
+  citecolor=Green,
+  urlcolor=Green,
+  pdfborderstyle={/S/U/W 1}
+}
+% Optional hard underline fallback:
+% \usepackage[normalem]{ulem}
+% \let\OldHref\href
+% \renewcommand{\href}[2]{\OldHref{#1}{\uline{#2}}}
+
+% ===========================
+%  Numbered items: counters
+%  - Main stream: thmsec (shared by everything except exercises)
+%  - Exercise stream: exsec (independent)
+%  Format: <section>.<count>
+% ===========================
+\newcounter{thmsec}[section]
+\renewcommand{\thethmsec}{\thesection.\arabic{thmsec}}
+
+\newcounter{exsec}[section]
+\renewcommand{\theexsec}{\thesection.\arabic{exsec}}
+
+% ===========================
+%  Boxed theorem environments (B) via tcolorbox
+% ===========================
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{breakable,skins}
+
+% --- Colors ---
+\definecolor{DefBody}{HTML}{FFFACD}
+\definecolor{DefTitle}{HTML}{FFF6A8}
+\definecolor{ThmBody}{HTML}{E2E8F4}
+\definecolor{ThmTitle}{HTML}{B7C8E6}
+
+% --- Base style for all theorem boxes ---
+\tcbset{
+  mythm/.style={
+    enhanced,
+    breakable,
+    boxrule=0.9pt,
+    arc=5mm,
+    coltitle=black,
+    fonttitle=\bfseries,
+    left=4mm,right=4mm,top=3mm,bottom=3mm,
+    boxed title style={boxrule=0pt,arc=5mm},
+    titlerule=0.9pt,
+    toptitle=2mm,bottomtitle=2mm,
+    lefttitle=4mm,righttitle=4mm,
+  }
+}
+
+% ===========================
+%  Internal helper: start numbered item (boxed/unboxed)
+%  #1 = label, #2 = printed type (e.g. Definition), #3 = title text
+%  - No reservation system: increments the appropriate counter at print time
+%  - Creates hypertarget + \label{<label>} at print time
+% ===========================
+\makeatletter
+\newcommand{\BeginNumberedItem}[3]{%
+  \refstepcounter{thmsec}%
+  \edef\ItemNumber{\thethmsec}%
+  \hypertarget{#1}{}\label{#1}%
+  \def\ItemType{#2}%
+  \def\ItemTitle{#3}%
+}
+% Same interface, but uses the exercise counter
+\newcommand{\BeginExerciseItem}[3]{%
+  \refstepcounter{exsec}%
+  \edef\ItemNumber{\theexsec}%
+  \hypertarget{#1}{}\label{#1}%
+  \def\ItemType{#2}%
+  \def\ItemTitle{#3}%
+}
+\makeatother
+
+% ===========================
+%  Box templates (no counters inside tcolorbox)
+%  IMPORTANT: now uses \ItemNumber (set by begin-helper)
+% ===========================
+\newtcolorbox{DefBox}[0]{%
+  mythm,
+  colback=DefBody,
+  colbacktitle=DefTitle,
+  colframe=black,
+  title={\ItemType~\ItemNumber:~\ItemTitle},
+}
+
+\newtcolorbox{ThmBox}[0]{%
+  mythm,
+  colback=ThmBody,
+  colbacktitle=ThmTitle,
+  colframe=black,
+  title={\ItemType~\ItemNumber:~\ItemTitle},
+}
+
+\newtcolorbox{ExBox}[0]{%
+  mythm,
+  colback=white,
+  colbacktitle=black!10,
+  colframe=black,
+  title={\ItemType~\ItemNumber:~\ItemTitle},
+}
+
+\newtcolorbox{NoteBox}[0]{%
+  mythm,
+  colback=black!2,
+  colbacktitle=black!12,
+  colframe=black!35,
+  title={\ItemType~\ItemNumber:~\ItemTitle},
+}
+
+% ===========================
+%  Public boxed environments (B): {title}{label}
+% ===========================
+\newenvironment{definitionB}[2]{%
+  \BeginNumberedItem{#2}{Definition}{#1}%
+  \begin{DefBox}%
+}{%
+  \end{DefBox}%
+}
+
+\newenvironment{exerciseB}[2]{%
+  \BeginExerciseItem{#2}{Exercise}{#1}%
+  \begin{ExBox}%
+}{%
+  \end{ExBox}%
+}
+
+\newenvironment{theoremB}[2]{%
+  \BeginNumberedItem{#2}{Theorem}{#1}%
+  \begin{ThmBox}%
+}{%
+  \end{ThmBox}%
+}
+
+\newenvironment{propositionB}[2]{%
+  \BeginNumberedItem{#2}{Proposition}{#1}%
+  \begin{ThmBox}%
+}{%
+  \end{ThmBox}%
+}
+
+\newenvironment{corollaryB}[2]{%
+  \BeginNumberedItem{#2}{Corollary}{#1}%
+  \begin{ThmBox}%
+}{%
+  \end{ThmBox}%
+}
+
+\newenvironment{conjectureB}[2]{%
+  \BeginNumberedItem{#2}{Conjecture}{#1}%
+  \begin{ThmBox}%
+}{%
+  \end{ThmBox}%
+}
+
+\newenvironment{axiomB}[2]{%
+  \BeginNumberedItem{#2}{Axiom}{#1}%
+  \begin{ThmBox}%
+}{%
+  \end{ThmBox}%
+}
+
+\newenvironment{observationB}[2]{%
+  \BeginNumberedItem{#2}{Observation}{#1}%
+  \begin{NoteBox}%
+}{%
+  \end{NoteBox}%
+}
+
+% ===========================
+%  Deferred/unboxed environments (R): {label}
+%  - Same numbering <section>.<count>
+%  - Exercises use exsec; everything else uses thmsec
+%  - Proofs: unnumbered
+% ===========================
+\newcommand{\RHeading}[2]{%
+  \par\medskip\noindent\textbf{#1~\ItemNumber.}\ %
+  \if\relax\detokenize{#2}\relax\else\textbf{#2}\ \fi
+}
+
+\newenvironment{exerciseR}[1]{%
+  \BeginExerciseItem{#1}{Exercise}{}%
+  \RHeading{Exercise}{}%
+}{\par\medskip}
+
+\newenvironment{lemmaR}[1]{%
+  \BeginNumberedItem{#1}{Lemma}{}%
+  \RHeading{Lemma}{}%
+}{\par\medskip}
+
+\newenvironment{propositionR}[1]{%
+  \BeginNumberedItem{#1}{Proposition}{}%
+  \RHeading{Proposition}{}%
+}{\par\medskip}
+
+\newenvironment{corollaryR}[1]{%
+  \BeginNumberedItem{#1}{Corollary}{}%
+  \RHeading{Corollary}{}%
+}{\par\medskip}
+
+\newenvironment{axiomR}[1]{%
+  \BeginNumberedItem{#1}{Axiom}{}%
+  \RHeading{Axiom}{}%
+}{\par\medskip}
+
+\newenvironment{assumptionR}[1]{%
+  \BeginNumberedItem{#1}{Assumption}{}%
+  \RHeading{Assumption}{}%
+}{\par\medskip}
+
+\newenvironment{exampleR}[1]{%
+  \BeginNumberedItem{#1}{Example}{}%
+  \RHeading{Example}{}%
+}{\par\medskip}
+
+\newenvironment{remarkR}[1]{%
+  \BeginNumberedItem{#1}{Remark}{}%
+  \RHeading{Remark}{}%
+}{\par\medskip}
+
+% Proofs: unboxed, unnumbered, but still labeled/anchored if you want
+\newenvironment{proofR}[1]{%
+  \hypertarget{#1}{}\label{#1}%
+  \begin{proof}%
+}{%
+  \end{proof}%
+}
+
+% Convenience (for already-defined labels)
+\newcommand{\laterref}[2]{\hyperlink{#1}{#2~\ref{#1}}}
+
+% ===========================
+%  Mathematical operators
+% ===========================
+
+% Linear algebra
+\DeclareMathOperator{\spn}{span}
+\DeclareMathOperator{\range}{range}
+\DeclareMathOperator{\im}{im}
+\DeclareMathOperator{\nullspace}{null}
+\DeclareMathOperator{\hess}{Hess}
+
+% Multilinear algebra
+\DeclareMathOperator{\sym}{sym}
+\DeclareMathOperator{\alt}{alt}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\vol}{vol}
+\DeclareMathOperator{\tr}{tr}
+
+% Set theory / Topology
+
+\DeclareMathOperator{\inte}{int}
+\DeclareMathOperator{\ext}{ext}
+
+% ===========================
+%  Commands
+% ===========================
+
+% Mathbb
+\newcommand{\RR}{\mathbb R}
+\newcommand{\CC}{\mathbb C}
+\newcommand{\FF}{\mathbb F}
+
+% Mathcal
+\newcommand{\LL}{\mathcal L}
+
+% Formatting and notation
+\newcommand{\bb}[1]{\symbf{#1}}
+\newcommand{\bbi}[1]{\symfit{#1}}
+\renewcommand{\rm}[1]{\symrm{#1}}
+\renewcommand{\v}[1]{\symbfit{#1}}
+\DeclareMathOperator{\supp}{supp}
+
+% Delimiters
+\DeclarePairedDelimiter{\paren}{(}{)}
+\DeclarePairedDelimiter{\inner}{\langle}{\rangle}
+\DeclarePairedDelimiter{\bars}{|}{|}
+\DeclarePairedDelimiter{\set}{\{}{\}}
+
+% -- Defining norm with subscript --
+\DeclarePairedDelimiter{\normdelim}{\lVert}{\rVert}
+
+% syntax: \norm{X}[p] or \norm*{X}[p] or \norm[\Big]{X}[p]
+\NewDocumentCommand{\norm}{s o m o}{%
+  \IfBooleanTF{#1}{%
+    \IfNoValueTF{#4}
+      {\normdelim*{#3}}
+      {{\normdelim*{#3}}_{#4}}%
+  }{%
+    \IfNoValueTF{#2}{%
+      \IfNoValueTF{#4}
+        {\normdelim{#3}}
+        {{\normdelim{#3}}_{#4}}%
+    }{%
+      \IfNoValueTF{#4}
+        {\normdelim[#2]{#3}}
+        {{\normdelim[#2]{#3}}_{#4}}%
+    }%
+  }%
+}

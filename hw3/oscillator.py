@@ -101,5 +101,15 @@ def run_1c():
             print(f"Max θ reached by nonlinear: {np.max(np.abs(θ_nonlin[index:])):.3f} rad")
             break
 
-
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--part", type=str, required=True, help="Assignment part (e.g. 1b, 1c)")
+    args = parser.parse_args()
+    
+    if args.part == "1b":
+        run_1b()
+    elif args.part == "1c":
+        run_1c()
+    else:
+        print("This section is not specified")  
     
